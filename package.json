@@ -24,5 +24,32 @@
   "bugs": {
     "url": "https://github.com/influentialpublishers/yaldic/issues"
   },
-  "homepage": "https://github.com/influentialpublishers/yaldic#readme"
+  "homepage": "https://github.com/influentialpublishers/yaldic#readme",
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 6,
+      "sourceType": "module",
+      "ecmaFeatures": {}
+    },
+    "env": {
+      "node": true
+    },
+    "ecmaFeatures": {
+      "arrowFunctions": true,
+      "blockBindings": true,
+      "defaultParams": true,
+      "destructuring": true,
+      "spread": true,
+      "templateStrings": true
+    }
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  },
+  "dependencies": {
+    "dependency-graph": "^0.5.0",
+    "istanbul": "^0.4.4"
+  }
 }
