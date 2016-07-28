@@ -1,0 +1,28 @@
+{
+  "name": "yaldic",
+  "version": "0.1.0",
+  "description": "Yet Another Lightweight Dependency Injection Container",
+  "main": "index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/influentialpublishers/yaldic.git"
+  },
+  "keywords": [
+    "ioc",
+    "dependency",
+    "injection",
+    "inversion",
+    "control",
+    "lightweight",
+    "container"
+  ],
+  "author": "Nathan A Sculli <nsculli@influential.co>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/influentialpublishers/yaldic/issues"
+  },
+  "homepage": "https://github.com/influentialpublishers/yaldic#readme"
+}
