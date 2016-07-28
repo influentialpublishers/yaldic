@@ -10,7 +10,13 @@ function Yaldic() {
 
   return {
     register: (name, node) => {
-      graph.addNode(name, node);
+      if (graph.hasNode(name)) {
+
+        graph.setNodeData(name, node);
+        
+      } else {
+        graph.addNode(name, node);
+      }
 
       return this;
     }
