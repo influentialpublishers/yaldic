@@ -26,7 +26,8 @@ describe('YALDIC', function() {
   });
 
 
-  it('should overwrite a node with a new value', () => {
+  it('should throw an error by default when attempting to overwrite a ' +
+  'node with a new value', () => {
 
     const container = yaldic();
 
@@ -35,10 +36,26 @@ describe('YALDIC', function() {
 
     expect(intermediate).to.eql('bar');
 
-    container.register('foo', 'baz');
-    const actual = container.get('foo');
-
-    expect(actual).to.eql('baz');
+    const test = () => container.register('foo', 'baz');
+    expect(test).to.throw(/Cannot overwrite already existing node: foo/);
 
   });
+
+
+  it('should not allow an overwrite when configured to do so', () => {
+
+    const container = yaldic({ allow_overwrite : true });
+
+    container.register('foo', 'bar');
+    const intermediate = container.get('foo');
+
+    expect(intermediate).to.eql('bar');
+
+    container.register('foo', 'baz');
+    const actual = container.get('foo');
+    expect(actual).to.eql('baz');
+
+
+  });
+
 });
