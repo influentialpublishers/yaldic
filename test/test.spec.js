@@ -58,4 +58,95 @@ describe('YALDIC', function() {
 
   });
 
+
+  describe('Yaldic.express', function() {
+
+    it('should return a function with an arity of 3', () => {
+
+      const plugin = yaldic.express({});
+      expect(plugin).to.be.a('function');
+      expect(plugin.length).to.eql(3);
+
+    });
+
+
+    it('should return an empty container in the request at the given ' +
+    'namespace', (done) => {
+
+      const plugin = yaldic.express({});
+      const req = {};
+
+      plugin(req, {}, () => {
+
+        expect(req.hasOwnProperty('yaldic')).to.be.true;
+        expect(req.yaldic.get).to.be.a('function');
+        expect(req.yaldic.register).to.be.a('function');
+        done();
+
+      });
+
+    });
+
+
+    it('should throw an error when the request namespace already exists ',
+    () => {
+
+      const plugin = yaldic.express({});
+      const req = { yaldic: 'yo mama' };
+
+      const test = () => plugin(req, {});
+
+      expect(test).to.throw(/Cannot overwrite already existing namespace/);
+
+    });
+
+
+    it('should use the provided namespace', (done) => {
+
+      const plugin = yaldic.express({ namespace: 'blorp' });
+      const req = {};
+
+      plugin(req, {}, () => {
+        expect(req.hasOwnProperty('blorp')).to.be.true;
+        done();
+      });
+
+    });
+
+
+    it('should accept an allow overwrite parameter', (done) => {
+
+      const plugin = yaldic.express({ allow_overwrite: true });
+      const req = {};
+
+      plugin(req, {}, () => {
+
+        req.yaldic.register('foo', 'bar');
+        req.yaldic.register('foo', 'baz');
+
+        expect(req.yaldic.get('foo')).to.eql('baz');
+
+        done();
+      });
+
+    });
+
+
+    it('should use the set container', (done) => {
+
+      const mydic  = yaldic();
+      mydic.register('foo', 'bar');
+
+      const plugin = yaldic.express({ container: mydic });
+      const req    = {};
+
+      plugin(req, {}, () => {
+        expect(req.yaldic.get('foo')).to.eql('bar');
+        done();
+      });
+
+    });
+
+  });
+
 });
