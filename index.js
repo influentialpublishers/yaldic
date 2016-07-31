@@ -68,6 +68,9 @@ Yaldic.autoInject = function autoInject(context, container) {
  * - allow_overwrite:
  *      Are you allowed to re-assign node values?  (default = no)
  * - container: Your very own yaldic container
+ * - auto_inject_req:
+ *     If your stored node is a function then the `req` object will be 
+ *     automatically called with the `req` object.
  */
 Yaldic.express = function(settings = {}) {
 
