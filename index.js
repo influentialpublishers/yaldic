@@ -1,9 +1,9 @@
 
 
-const { DepGraph } = require('dependency-graph');
-
-
-const DEFAULT_NAMESPACE = 'yaldic';
+const { DepGraph }  = require('dependency-graph');
+const Type          = require('./lib/type');
+const ExpressConfig = require('./lib/express-config');
+console.log('TYPE: ', Type);
 
 
 function throwOverwriteError(name) {
@@ -16,6 +16,15 @@ function throwExpressNamespaceExistsError(namespace) {
 }
 
 
+function validateNode(node) {
+
+  if (typeof node === 'string')
+    throw new TypeError('Dependency node cannot be a string');
+
+  return node;
+
+}
+
 function Yaldic({ allow_overwrite = false } = {}) {
 
   const graph = new DepGraph();
@@ -23,7 +32,12 @@ function Yaldic({ allow_overwrite = false } = {}) {
 
   return {
 
-    register: (name, node) => {
+    register: (name, node, type = Type.VALUE) => {
+
+      validateNode(node);
+
+      node.$type = type;
+
       if (graph.hasNode(name)) {
 
         if (!allow_overwrite) throwOverwriteError(name);
@@ -42,13 +56,20 @@ function Yaldic({ allow_overwrite = false } = {}) {
   
 }
 
+/**
+ * Configuration:
+ *
+ * - namespace: This will be the `req` object attachment point.
+ * - allow_overwrite:
+ *      Are you allowed to re-assign node values?  (default = no)
+ * - container: Your very own yaldic container
+ */
+Yaldic.express = function(settings = {}) {
 
-Yaldic.express = function(config = {}) {
-
-  let { namespace, allow_overwrite, container } = config;
-
-  if (!namespace) namespace = DEFAULT_NAMESPACE;
-  if(!container) container = Yaldic({ allow_overwrite }); 
+  const {
+    namespace
+  , container
+  } = ExpressConfig(Yaldic, settings);
 
   return function(req, res, next) {
 
@@ -58,9 +79,11 @@ Yaldic.express = function(config = {}) {
 
     return next();
 
-  }
+  };
 
 }
+
+Yaldic.Type = Type;
 
 
 module.exports = Yaldic;

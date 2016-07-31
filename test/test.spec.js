@@ -26,35 +26,60 @@ describe('YALDIC', function() {
   });
 
 
+  it('should throw an error when trying to store a string', () => {
+
+    const container = yaldic();
+    const test = () => container.register('foo', 'bar')
+
+    expect(test).to.throw(/Dependency node cannot be a string/);
+
+  });
+
+
   it('should throw an error by default when attempting to overwrite a ' +
   'node with a new value', () => {
 
     const container = yaldic();
 
-    container.register('foo', 'bar');
+    container.register('foo', { bar: 'baz' });
     const intermediate = container.get('foo');
 
-    expect(intermediate).to.eql('bar');
+    expect(intermediate.bar).to.eql('baz');
 
-    const test = () => container.register('foo', 'baz');
+    const test = () => container.register('foo', { bar: 'buzz'});
     expect(test).to.throw(/Cannot overwrite already existing node: foo/);
 
   });
 
 
-  it('should not allow an overwrite when configured to do so', () => {
+  it('should allow an overwrite when configured to do so', () => {
 
     const container = yaldic({ allow_overwrite : true });
 
-    container.register('foo', 'bar');
+    container.register('foo', { bar: 'baz' });
     const intermediate = container.get('foo');
 
-    expect(intermediate).to.eql('bar');
+    expect(intermediate.bar).to.eql('baz');
 
-    container.register('foo', 'baz');
+    container.register('foo', { bar: 'buzz' });
     const actual = container.get('foo');
-    expect(actual).to.eql('baz');
+    expect(actual.bar).to.eql('buzz');
 
+
+  });
+
+
+  describe('node.$type', function() {
+
+    it('should store the node type as Type.VALUE by default', () => {
+
+      const plugin = yaldic();
+      plugin.register('foo', {});
+
+      const foo = plugin.get('foo');
+      expect(foo.$type).to.eql(yaldic.Type.VALUE);
+
+    });
 
   });
 
@@ -121,10 +146,10 @@ describe('YALDIC', function() {
 
       plugin(req, {}, () => {
 
-        req.yaldic.register('foo', 'bar');
-        req.yaldic.register('foo', 'baz');
+        req.yaldic.register('foo', { foo: 'bar' });
+        req.yaldic.register('foo', { foo: 'baz' });
 
-        expect(req.yaldic.get('foo')).to.eql('baz');
+        expect(req.yaldic.get('foo').foo).to.eql('baz');
 
         done();
       });
@@ -135,13 +160,13 @@ describe('YALDIC', function() {
     it('should use the set container', (done) => {
 
       const mydic  = yaldic();
-      mydic.register('foo', 'bar');
+      mydic.register('foo', { bar: 'baz' });
 
       const plugin = yaldic.express({ container: mydic });
       const req    = {};
 
       plugin(req, {}, () => {
-        expect(req.yaldic.get('foo')).to.eql('bar');
+        expect(req.yaldic.get('foo').bar).to.eql('baz');
         done();
       });
 
