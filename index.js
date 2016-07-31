@@ -1,19 +1,9 @@
 
 
-const { DepGraph }  = require('dependency-graph');
-const Type          = require('./lib/type');
-const ExpressConfig = require('./lib/express-config');
-console.log('TYPE: ', Type);
-
-
-function throwOverwriteError(name) {
-  throw new Error(`Cannot overwrite already existing node: ${name}`);
-}
-
-
-function throwExpressNamespaceExistsError(namespace) {
-  throw new Error(`Cannot overwrite already existing namespace: ${namespace}`);
-}
+const { DepGraph }       = require('dependency-graph');
+const Type               = require('./lib/type');
+const ExpressConfig      = require('./lib/express-config');
+const { OverwriteError } = require('./lib/error');
 
 
 function validateNode(node) {
@@ -40,7 +30,7 @@ function Yaldic({ allow_overwrite = false } = {}) {
 
       if (graph.hasNode(name)) {
 
-        if (!allow_overwrite) throwOverwriteError(name);
+        if (!allow_overwrite) OverwriteError.throw(name);
 
         graph.setNodeData(name, node);
         
@@ -73,7 +63,7 @@ Yaldic.express = function(settings = {}) {
 
   return function(req, res, next) {
 
-    if (req[namespace]) throwExpressNamespaceExistsError(namespace);
+    if (req[namespace]) OverwriteError.throw(namespace);
 
     req[namespace] = container;
 

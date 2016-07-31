@@ -47,7 +47,7 @@ describe('YALDIC', function() {
     expect(intermediate.bar).to.eql('baz');
 
     const test = () => container.register('foo', { bar: 'buzz'});
-    expect(test).to.throw(/Cannot overwrite already existing node: foo/);
+    expect(test).to.throw(/Cannot overwrite already existing namespace foo/);
 
   });
 
