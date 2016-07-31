@@ -26,6 +26,21 @@ describe('Error', function () {
 
     });
 
+
+    it('should have a throw method which will throw a new instance of ' +
+    'itself', () => {
+
+      const test = () => OverwriteError.throw('bar');
+      
+
+      expect(test).to.throw(
+        OverwriteError
+      , /Cannot overwrite already existing namespace bar/
+      );
+
+    });
+
   });
+
 
 });
