@@ -1,5 +1,6 @@
 /* eslint-env node, mocha */
 const expect = require('chai').expect;
+const sinon  = require('sinon');
 const yaldic = require('../index');
 
 
@@ -78,6 +79,50 @@ describe('YALDIC', function() {
 
       const foo = plugin.get('foo');
       expect(foo.$type).to.eql(yaldic.Type.VALUE);
+
+    });
+
+  });
+
+
+  describe('Yaldic.autoInject', function() {
+
+    it('should wrap the register method', () => {
+
+      const container = yaldic.autoInject(null, yaldic());
+      container.register('foo', { bar: 'buzz' });
+
+      const node = container.get('foo');
+      expect(node.bar).to.eql('buzz');
+
+    });
+
+
+    it('should inject the given context into a stored function', () => {
+
+      const context = { foo: 'bar' };
+      const container = yaldic.autoInject(context, yaldic());
+
+      const node_stub = sinon.stub().returns('blah');
+      container.register('test', node_stub);
+
+      const node = container.get('test');
+
+      expect(node).to.eql('blah');
+      expect(node_stub.calledOnce).to.be.true;
+      expect(node_stub.calledWith(context)).to.be.true;
+
+    });
+
+    it('should just return an object value', () => {
+
+      const context = { foo: 'bar' };
+      const container = yaldic.autoInject(context, yaldic());
+
+      container.register('blah', { boo: 'bah' });
+      const node = container.get('blah');
+
+      expect(node.boo).to.eql('bah');
 
     });
 
@@ -167,6 +212,26 @@ describe('YALDIC', function() {
 
       plugin(req, {}, () => {
         expect(req.yaldic.get('foo').bar).to.eql('baz');
+        done();
+      });
+
+    });
+
+
+    it('should auto-inject the request object if the user sets the ' +
+    '`auto_inject_req` setting to a truthy value', (done) => {
+
+      const testdic = yaldic();
+      testdic.register('foo', (req) => req.bar);
+
+      const plugin = yaldic.express({
+        container: testdic
+      , auto_inject_req: true
+      });
+      const req = { bar: 'success' };
+
+      plugin(req, {}, () => {
+        expect(req.yaldic.get('foo')).to.eql('success');
         done();
       });
 

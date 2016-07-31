@@ -46,6 +46,21 @@ function Yaldic({ allow_overwrite = false } = {}) {
   
 }
 
+
+Yaldic.autoInject = function autoInject(context, container) {
+
+  return {
+    register: container.register.bind(container)
+  , get: (name) => {
+
+      const node = container.get(name);
+      return typeof node === 'function' ? node(context) : node;
+
+    }
+  };
+
+};
+
 /**
  * Configuration:
  *
@@ -59,13 +74,15 @@ Yaldic.express = function(settings = {}) {
   const {
     namespace
   , container
+  , auto_inject_req
   } = ExpressConfig(Yaldic, settings);
 
   return function(req, res, next) {
 
     if (req[namespace]) OverwriteError.throw(namespace);
 
-    req[namespace] = container;
+    req[namespace] = auto_inject_req ?
+      Yaldic.autoInject(req, container) : container;
 
     return next();
 
