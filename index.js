@@ -1,99 +1,39 @@
 
-
-const { DepGraph }       = require('dependency-graph');
-const Type               = require('./lib/type');
-const ExpressConfig      = require('./lib/express-config');
-const { OverwriteError } = require('./lib/error');
-
-
-function validateNode(node) {
-
-  if (typeof node === 'string')
-    throw new TypeError('Dependency node cannot be a string');
-
-  return node;
-
-}
-
-function Yaldic({ allow_overwrite = false } = {}) {
-
-  const graph = new DepGraph();
+const R                  = require('ramda')
+const Bluebird           = require('bluebird')
+const Mysql2             = require('mysql2')
+const Request            = require('request')
+const MysqlStore         = require('kuss/lib/mysql')
+const SocialZombieClient = require('kuss/lib/socialzombie/client.js')
+const RabbitMQ           = require('kuss/lib/rabbitmq/factory.js')
+const Elasticsearch      = require('elasticsearch')
+const Domain             = require('kvasir/loader.js')
 
 
-  return {
-
-    register: (name, node, type = Type.VALUE) => {
-
-      validateNode(node);
-
-      node.$type = type;
-
-      if (graph.hasNode(name)) {
-
-        if (!allow_overwrite) OverwriteError.throw(name);
-
-        graph.setNodeData(name, node);
-        
-      } else {
-        graph.addNode(name, node);
-      }
-
-      return this;
-    }
-
-  , get: (name) => graph.getNodeData(name)
-  }
-  
-}
+const throwDoesNotExist = (dep) => { throw new Error(`${dep} does not exist`) }
 
 
-Yaldic.autoInject = function autoInject(context, container) {
-
-  return {
-    register: container.register.bind(container)
-  , get: (name) => {
-
-      const node = container.get(name);
-      return typeof node === 'function' ? node(context) : node;
-
-    }
-  };
-
-};
-
-/**
- * Configuration:
- *
- * - namespace: This will be the `req` object attachment point.
- * - allow_overwrite:
- *      Are you allowed to re-assign node values?  (default = no)
- * - container: Your very own yaldic container
- * - auto_inject_req:
- *     If your stored node is a function then the `req` object will be 
- *     automatically called with the `req` object.
- */
-Yaldic.express = function(settings = {}) {
-
-  const {
-    namespace
-  , container
-  , auto_inject_req
-  } = ExpressConfig(Yaldic, settings);
-
-  return function(req, res, next) {
-
-    if (req[namespace]) OverwriteError.throw(namespace);
-
-    req[namespace] = auto_inject_req ?
-      Yaldic.autoInject(req, container) : container;
-
-    return next();
-
-  };
-
-}
-
-Yaldic.Type = Type;
+const getDAO = (config) => MysqlStore(Mysql2.createPool(config))
 
 
-module.exports = Yaldic;
+const getSocialzombie = (config) =>
+  SocialZombieClient(Request.defaults({ baseUrl : config.url }))
+
+
+const getElasticsearch = (config) => new Elasticsearch.Client({
+  host  : `${config.host}:${config.port}`
+, defer : () => Bluebird.defer()
+})
+
+
+const get = R.cond([
+  [ R.equals('DO')            , () => Domain ]
+, [ R.equals('DAO')           , () => getDAO ]
+, [ R.equals('rabbitmq')      , () => RabbitMQ ]
+, [ R.equals('socialzombie')  , () => getSocialzombie ]
+, [ R.equals('elasticsearch') , () => getElasticsearch ]
+, [ R.T                       , throwDoesNotExist ]
+])
+
+
+module.exports = { get }
