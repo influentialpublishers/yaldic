@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "istanbul": "^0.4.4",
+    "props-check": "^0.3.2",
     "ramda": "^0.22.1"
   }
 }

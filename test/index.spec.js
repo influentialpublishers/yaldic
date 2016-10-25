@@ -31,7 +31,7 @@ describe('YALDIC', function() {
   it('should throw an error when getting a nonexistant dependency', () => {
 
     const myYaldic = Yaldic({ foo : R.T })
-    Expect(() => myYaldic.get('hard')).to.throw(Error)
+    Expect(() => myYaldic.get('food')).to.throw(Error)
 
   })
 

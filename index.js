@@ -1,5 +1,12 @@
 
-const R = require('ramda')
+const R          = require('ramda')
+const PropsCheck = require('props-check')
+
+
+const ERR = {
+  DNE     : (name) => `Dependency does not exist ${name}`
+, SUGGEST : (suggestions) => `\nDid you mean one of these: ${suggestions}`
+}
 
 
 const throwErrorIfNoSpec = R.when(
@@ -8,14 +15,24 @@ const throwErrorIfNoSpec = R.when(
 )
 
 
-// const throwNotInSpec = (key) => {
-//   throw new Error(`Dependency does not exist: ${key}`)
-// }
+const throwError = R.curry((spec, name) => R.ifElse(
+  R.isEmpty
+, () => { throw new Error(ERR.DNE(name))}
+, (suggestions) => { throw new Error(ERR.DNE(name) + ERR.SUGGEST(suggestions)) }
+))
+
+
+const checkProps = R.curry((spec, name) => R.compose(
+  throwError(spec, name)
+, R.prop(name)
+, PropsCheck(spec)
+, R.objOf(R.__, null)
+)(name))
 
 
 const throwErrorIfNotInSpec = (spec) => R.when(
   R.compose(R.not, R.has(R.__, spec))
-, (key) => { throw new Error(`Dependency does not exist: ${key}`) }
+, checkProps(spec)
 )
 
 
@@ -40,9 +57,7 @@ const Yaldic = (spec) => {
 
   throwErrorIfNoSpec(spec)
 
-  return {
-    get : getInstance
-  }  
+  return { get : getInstance }  
 
 }
 
