@@ -50,7 +50,8 @@
     "sinon": "^1.17.5"
   },
   "dependencies": {
-    "dependency-graph": "^0.5.0",
-    "istanbul": "^0.4.4"
+    "istanbul": "^0.4.4",
+    "props-check": "^0.3.2",
+    "ramda": "^0.22.1"
   }
 }
