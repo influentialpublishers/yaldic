@@ -1,0 +1,7 @@
+language: node_js
+node_js:
+  - node
+  - 6
+
+after_script:
+  - bash <(curl -s https://codecov.io/bash)
