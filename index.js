@@ -1,99 +1,50 @@
 
-
-const { DepGraph }       = require('dependency-graph');
-const Type               = require('./lib/type');
-const ExpressConfig      = require('./lib/express-config');
-const { OverwriteError } = require('./lib/error');
+const R = require('ramda')
 
 
-function validateNode(node) {
-
-  if (typeof node === 'string')
-    throw new TypeError('Dependency node cannot be a string');
-
-  return node;
-
-}
-
-function Yaldic({ allow_overwrite = false } = {}) {
-
-  const graph = new DepGraph();
+const throwErrorIfNoSpec = R.when(
+  R.either(R.isEmpty, R.isNil)
+, () => { throw new Error('Spec object is required') }
+)
 
 
-  return {
+// const throwNotInSpec = (key) => {
+//   throw new Error(`Dependency does not exist: ${key}`)
+// }
 
-    register: (name, node, type = Type.VALUE) => {
 
-      validateNode(node);
+const throwErrorIfNotInSpec = (spec) => R.when(
+  R.compose(R.not, R.has(R.__, spec))
+, (key) => { throw new Error(`Dependency does not exist: ${key}`) }
+)
 
-      node.$type = type;
 
-      if (graph.hasNode(name)) {
+// Yaldic :: Spec -> Yaldic
+const Yaldic = (spec) => {
 
-        if (!allow_overwrite) OverwriteError.throw(name);
+  const instances = {}
 
-        graph.setNodeData(name, node);
-        
-      } else {
-        graph.addNode(name, node);
-      }
-
-      return this;
-    }
-
-  , get: (name) => graph.getNodeData(name)
+  // createInstance :: String -> a
+  const createInstance = (name) => {
+    instances[name] = spec[name]()
+    return instances[name]
   }
-  
-}
 
+  // getInstance :: String -> a
+  const getInstance = (name) => {
+    throwErrorIfNotInSpec(spec)(name)
+    if (instances[name])
+      return instances[name]
+    return createInstance(name)
+  }
 
-Yaldic.autoInject = function autoInject(context, container) {
+  throwErrorIfNoSpec(spec)
 
   return {
-    register: container.register.bind(container)
-  , get: (name) => {
-
-      const node = container.get(name);
-      return typeof node === 'function' ? node(context) : node;
-
-    }
-  };
-
-};
-
-/**
- * Configuration:
- *
- * - namespace: This will be the `req` object attachment point.
- * - allow_overwrite:
- *      Are you allowed to re-assign node values?  (default = no)
- * - container: Your very own yaldic container
- * - auto_inject_req:
- *     If your stored node is a function then the `req` object will be 
- *     automatically called with the `req` object.
- */
-Yaldic.express = function(settings = {}) {
-
-  const {
-    namespace
-  , container
-  , auto_inject_req
-  } = ExpressConfig(Yaldic, settings);
-
-  return function(req, res, next) {
-
-    if (req[namespace]) OverwriteError.throw(namespace);
-
-    req[namespace] = auto_inject_req ?
-      Yaldic.autoInject(req, container) : container;
-
-    return next();
-
-  };
+    get : getInstance
+  }  
 
 }
 
-Yaldic.Type = Type;
 
-
-module.exports = Yaldic;
+module.exports = Yaldic
